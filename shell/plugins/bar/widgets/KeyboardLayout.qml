@@ -12,6 +12,7 @@ BarWidget {
 
   property string layoutLabel: ""
   property string layoutFull: ""
+  property int layoutCount: 0
 
   function refresh() {
     if (!queryProc.running) queryProc.running = true
@@ -42,12 +43,20 @@ BarWidget {
     stdout: StdioCollector {
       waitForEnd: true
       onStreamFinished: {
-        var match = String(text || "").match(/"active_keymap":\s*"([^"]+)"/)
+        var out = String(text || "")
+        var match = out.match(/"active_keymap":\s*"([^"]+)"/)
         if (!match) return
         var full = match[1]
         root.layoutFull = full
         var token = full.split(/\s+/)[0]
         root.layoutLabel = token.substring(0, 3).toUpperCase()
+
+        // A single-layout machine has nothing to switch between, so the widget
+        // stays out of the bar entirely rather than parking a constant label.
+        var layouts = out.match(/"layout":\s*"([^"]*)"/)
+        root.layoutCount = layouts ? layouts[1].split(",").filter(function (layout) {
+          return layout.trim() !== ""
+        }).length : 0
       }
     }
   }
@@ -65,7 +74,7 @@ BarWidget {
     onTriggered: root.refresh()
   }
 
-  visible: layoutLabel !== ""
+  visible: layoutLabel !== "" && layoutCount > 1
   implicitWidth: button.implicitWidth
   implicitHeight: button.implicitHeight
 
