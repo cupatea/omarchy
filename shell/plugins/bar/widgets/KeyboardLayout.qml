@@ -18,7 +18,11 @@ BarWidget {
   }
 
   function cycleLayout() {
-    Hyprland.dispatch("switchxkblayout current next")
+    // "all" rather than "current": an input method framework such as fcitx5
+    // registers a virtual keyboard that Hyprland reports as the main device,
+    // so "current" switches that one and leaves the physical keyboard typing
+    // the layout the widget just claimed to move off.
+    Hyprland.dispatch("switchxkblayout all next")
     refreshTimer.restart()
   }
 
